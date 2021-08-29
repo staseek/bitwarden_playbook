@@ -1,0 +1,4 @@
+vault_password_file
+*.DS_Store
+.idea
+venv

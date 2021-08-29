@@ -1,0 +1,41 @@
+- name: Install docker support packages
+  apt:
+    update_cache: yes
+    state: latest
+    pkg:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+  become: true
+
+- name: Docker add key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  become: true
+
+- name: Docker add repository
+  shell: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  args:
+    executable: /bin/bash
+  become: true
+    
+- name: Install Docker packages
+  apt:
+    update_cache: yes
+    state: latest
+    pkg:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+  become: true
+
+- name: Install python Docker binding
+  pip:
+    name: docker
+    state: latest
+  become: true
+  become_user: root
+

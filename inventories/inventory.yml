@@ -1,0 +1,6 @@
+all:
+  children:
+    bitwarden_servers:
+      hosts:
+        bitwarden_server
+

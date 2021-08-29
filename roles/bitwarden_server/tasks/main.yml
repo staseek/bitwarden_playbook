@@ -1,0 +1,34 @@
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- import_tasks: install_docker.yml
+  when: "'docker-ce' not in ansible_facts.packages"
+
+- name: Install docker-compose
+  get_url:
+    url : https://github.com/docker/compose/releases/download/1.25.1-rc1/docker-compose-Linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: 'u+x,g+x'
+  become: true
+  become_user: root
+
+- name: Create vw-data directory
+  file:
+    path: /vw-data
+    state: directory
+  become: true
+
+- name: Start Bitwarden-rs docker
+  docker_container:
+    name: "vaultwarden"
+    image: vaultwarden/server
+    state: started
+    pull: yes
+    ports:
+      - "127.0.0.1:8888:80"
+    volumes:
+      - "/vw-data/:/data/"
+  become: true
+
+- import_tasks: install_and_configure_nginx.yml

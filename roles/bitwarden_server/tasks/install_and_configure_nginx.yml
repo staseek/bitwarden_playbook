@@ -1,0 +1,109 @@
+- name: Install Nginx
+  package:
+    name: nginx
+    state: latest
+  become: true
+
+- name: Installing Rsync
+  apt: >
+    pkg={{ item }}
+    state=latest
+    update_cache=yes
+    cache_valid_time=3600
+  with_items:
+  - rsync
+  become: true
+  become_user: root
+
+- name: Add letsencrypt packages
+  package:
+    name: "{{item}}"
+    state: latest
+  loop:
+    - software-properties-common
+    - letsencrypt
+    - python3-certbot-nginx
+  become: true
+
+- name: Check if {{ bitwarden_domain_name }} enabled
+  stat:
+    path: /etc/nginx/sites-enabled/{{ bitwarden_domain_name }}
+  register: site_enabled
+
+- name: Remove {{bitwarden_domain_name}} from enabled
+  file:
+    state: absent
+    path: /etc/nginx/sites-enabled/{{ bitwarden_domain_name }}
+  become: true
+  when: site_enabled.stat.exists
+
+- name: Create directory with htmls
+  file:
+    path: /var/www/{{ bitwarden_domain_name }}/html/
+    state: directory
+  become: true
+  become_user: root
+
+- name: Add updating cert stub html
+  template:
+    src: updating_html.j2
+    dest: /var/www/{{ bitwarden_domain_name }}/html/updating.html
+  become: true
+
+- name: Add nginx create_certificate config
+  template:
+    src: ../templates/create_certificate_nginx.j2
+    dest: /etc/nginx/sites-available/create_certificate
+  become: true
+
+- name: Enable create_certificate
+  file:
+    src: /etc/nginx/sites-available/create_certificate
+    dest: /etc/nginx/sites-enabled/create_certificate
+    state: link
+  become: true
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded
+  become: true
+
+- name: Create certificate
+  shell: letsencrypt certonly -n --agree-tos -m {{account_notifications_email}} -a webroot --webroot-path=/var/www/{{ bitwarden_domain_name }}/html -d {{ bitwarden_domain_name }}
+  args:
+    chdir: /
+    executable: /bin/bash
+  become: true
+
+- name: Remove create_certificate from enabled
+  file:
+    state: absent
+    path: /etc/nginx/sites-enabled/create_certificate
+  become: true
+
+- name: Remove create_certificate from available
+  file:
+    state: absent
+    path: /etc/nginx/sites-available/create_certificate
+  become: true
+
+- name: Add nginx application config
+  template:
+    src: web_server_proxy_nginx.j2
+    dest: /etc/nginx/sites-available/{{ bitwarden_domain_name }}
+  become: true
+
+
+- name: Enable {{ bitwarden_domain_name }}
+  file:
+    src: /etc/nginx/sites-available/{{ bitwarden_domain_name }}
+    dest: /etc/nginx/sites-enabled/{{ bitwarden_domain_name }}
+    state: link
+  become: true
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded
+  become: true

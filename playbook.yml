@@ -1,0 +1,4 @@
+---
+- hosts: bitwarden_servers
+  roles:
+    - bitwarden_server
