@@ -27,6 +27,8 @@
     pull: yes
     ports:
       - "127.0.0.1:8888:80"
+    env:
+      SIGNUPS_ALLOWED: "false"
     volumes:
       - "/vw-data/:/data/"
   become: true
