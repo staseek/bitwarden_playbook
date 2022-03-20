@@ -2,6 +2,14 @@
   package_facts:
     manager: auto
 
+- name: Install packages
+  apt:
+    update_cache: yes
+    state: latest
+    pkg:
+    - python3-pip
+  become: true
+
 - import_tasks: install_docker.yml
   when: "'docker-ce' not in ansible_facts.packages"
 

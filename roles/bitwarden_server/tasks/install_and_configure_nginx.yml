@@ -70,7 +70,7 @@
   become: true
 
 - name: Create certificate
-  shell: letsencrypt certonly -n --agree-tos -m {{account_notifications_email}} -a webroot --webroot-path=/var/www/{{ bitwarden_domain_name }}/html -d {{ bitwarden_domain_name }}
+  shell: letsencrypt certonly -n --agree-tos -m {{account_notifications_email}} -a webroot --webroot-path=/var/www/html -d {{ bitwarden_domain_name }}
   args:
     chdir: /
     executable: /bin/bash
